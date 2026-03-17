@@ -66,5 +66,5 @@ if (process.env.NODE_ENV !== 'test') {
    }
 )};
 
-// BUG #6: App not exported - tests can't import it!
-// STUDENT FIX: Export the app module
+// FIX #6: Export app for testing
+module.exports = app;
