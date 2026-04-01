@@ -22,4 +22,24 @@
 # - Research: "Docker multi-stage React production"
 # ===========================================
 
-# YOUR CODE HERE:
+# Stage 1: Builder
+FROM node:18-alpine AS builder
+
+WORKDIR /app
+
+COPY package*.json ./
+
+RUN npm ci
+
+RUN npm run build
+
+# Stage 2: Production
+FROM node:18-alpine
+
+RUN npm install -g serve
+
+COPY --from=builder /app/build ./build
+
+EXPOSE 3000
+
+CMD ["serve", "-s", "build", "-l", "3000"]

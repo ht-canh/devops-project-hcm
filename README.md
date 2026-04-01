@@ -1,5 +1,7 @@
 # DevOps Base Project
-
+Hân Nguyễn
+Khang Đồng
+Danh Khoa
 ## Project Overview
 
 This is a simple Todo application with:
