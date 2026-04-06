@@ -1,0 +1,3 @@
+CONTRIBUTORS
+
+- Vu Tuan Nghia
