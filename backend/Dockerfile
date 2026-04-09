@@ -1,27 +1,33 @@
-# ===========================================
-# STUDENT TODO: Create a Multi-Stage Dockerfile
-# ===========================================
-#
-# Requirements:
-# 1. Stage 1 (builder):
-#    - Use node:18-alpine as base
-#    - Set working directory
-#    - Copy package files and install ALL dependencies
-#    - Copy source code
-#
-# 2. Stage 2 (production):
-#    - Use node:18-alpine as base
-#    - Set working directory
-#    - Copy only package files from builder
-#    - Install ONLY production dependencies (hint: --only=production)
-#    - Copy application code from builder
-#    - Expose the correct port
-#    - Set the start command
-#
-# Hints:
-# - Research: "Docker multi-stage build Node.js"
-# - Use COPY --from=builder to copy between stages
-# - Final image should be as small as possible
-# ===========================================
+# -------- Giai đoạn 1: Builder (Cài đặt và chuẩn bị) --------
+FROM node:18-alpine AS builder
 
-# YOUR CODE HERE:
+WORKDIR /app
+
+# Copy file quản lý thư viện
+COPY package*.json ./
+
+# Cài đặt tất cả thư viện (kể cả devDependencies để chạy test nếu cần)
+RUN npm install
+
+# Copy toàn bộ code nguồn
+COPY . .
+
+# -------- Giai đoạn 2: Production (Chỉ giữ lại những gì cần để chạy) --------
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Chỉ copy file package.json để chạy lệnh start
+COPY package*.json ./
+
+# Chỉ cài đặt thư viện cần thiết cho môi trường chạy (Production) để giảm dung lượng
+RUN npm install --only=production
+
+# Copy file server.js từ giai đoạn builder sang
+COPY --from=builder /app/server.js ./
+
+# Mở cổng 8080 cho Backend
+EXPOSE 8080
+
+# Lệnh khởi động server
+CMD ["node", "server.js"]
