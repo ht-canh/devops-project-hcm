@@ -1,0 +1,188 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+:root {
+  --radius: 10px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Roboto', Arial, sans-serif;
+}
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: 28px 16px;
+  transition: background-color 0.2s ease;
+}
+
+.app-card {
+  width: 100%;
+  max-width: 860px;
+  border-radius: 14px;
+  padding: 24px;
+  transition: all 0.2s ease;
+}
+
+.app-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.app h1 {
+  margin: 0;
+  font-size: 1.75rem;
+}
+
+.subtitle {
+  margin-top: 8px;
+  margin-bottom: 0;
+  opacity: 0.85;
+}
+
+.todo-form {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.todo-form input,
+.todo-main input {
+  width: 100%;
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  border: 1px solid;
+  font: inherit;
+}
+
+.todo-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.todo-item {
+  border: 1px solid;
+  border-radius: var(--radius);
+  padding: 10px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.todo-title {
+  font-weight: 500;
+}
+
+.completed .todo-title {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+.todo-actions {
+  display: flex;
+  gap: 8px;
+}
+
+button {
+  border-radius: var(--radius);
+  border: 0;
+  font: inherit;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.toggle-btn {
+  width: 40px;
+  height: 40px;
+  font-size: 1.05rem;
+}
+
+.status-text {
+  margin-top: 0;
+  opacity: 0.8;
+}
+
+.theme-light {
+  background: #f3f8ff;
+  color: #0d1b3d;
+}
+
+.theme-light .app-card {
+  background: #ffffff;
+  border: 1px solid #d5e6ff;
+  box-shadow: 0 10px 28px rgba(25, 67, 139, 0.13);
+}
+
+.theme-light .todo-item,
+.theme-light .todo-form input,
+.theme-light .todo-main input {
+  border-color: #b8d3ff;
+  background: #ffffff;
+  color: #0d1b3d;
+}
+
+.theme-light .primary-btn,
+.theme-light .theme-btn,
+.theme-light .toggle-btn {
+  background: #2364db;
+  color: #ffffff;
+}
+
+.theme-light .secondary-btn {
+  background: #e6f0ff;
+  color: #0d1b3d;
+}
+
+.theme-light .danger-btn {
+  background: #d94040;
+  color: #ffffff;
+}
+
+.theme-dark {
+  background: #0e203f;
+  color: #f3f8ff;
+}
+
+.theme-dark .app-card {
+  background: #112b57;
+  border: 1px solid #2f4d85;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+}
+
+.theme-dark .todo-item,
+.theme-dark .todo-form input,
+.theme-dark .todo-main input {
+  border-color: #3e629e;
+  background: #163670;
+  color: #f3f8ff;
+}
+
+.theme-dark .primary-btn,
+.theme-dark .theme-btn,
+.theme-dark .toggle-btn {
+  background: #f3f8ff;
+  color: #0e203f;
+}
+
+.theme-dark .secondary-btn {
+  background: #2b4f8b;
+  color: #f3f8ff;
+}
+
+.theme-dark .danger-btn {
+  background: #ff7d7d;
+  color: #0e203f;
+}

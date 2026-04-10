@@ -1,4 +1,4 @@
--- Database initialization script for PostgreSQL
+  -- Database initialization script for PostgreSQL
 -- This script runs automatically when the container starts
 
 CREATE TABLE IF NOT EXISTS todos (
