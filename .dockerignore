@@ -1,0 +1,11 @@
+# Ignore the local dependencies, we will install them INSIDE the
+container
+node_modules
+# Ignore Git files
+.git .gitignore
+# Ignore Docker files
+Dockerfile
+.dockerignore
+docker-compose.yml
+# Ignore local environment files
+.env
