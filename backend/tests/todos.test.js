@@ -1,5 +1,5 @@
 const request = require('supertest');
-const app = require('../server');
+const { app, pool } = require('../server');
 
 describe('Todos API', () => {
    // Test 1: Health check
@@ -60,7 +60,7 @@ describe('Todos API', () => {
       const deleteRes = await request(app)
          .delete(`/api/todos/${todoId}`);
 
-      expect(deleteRes.status).toBe(200);  // Will FAIL - 404!
+      expect(deleteRes.status).toBe(204);
    });
 
    // BROKEN TEST #4 - PUT endpoint not implemented!
@@ -77,8 +77,11 @@ describe('Todos API', () => {
          .put(`/api/todos/${todoId}`)
          .send({ title: 'Updated title', completed: true });
 
-      expect(updateRes.status).toBe(200);  // Will FAIL - 404!
+      expect(updateRes.status).toBe(200);
       expect(updateRes.body.title).toBe('Updated title');
       expect(updateRes.body.completed).toBe(true);
    });
+
+   afterAll(async () => { await pool.end(); });
+
 });
