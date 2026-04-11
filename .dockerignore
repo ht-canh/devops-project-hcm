@@ -1,0 +1,14 @@
+# Ignore local dependencies
+node_modules
+
+# Ignore Git files
+.git
+.gitignore
+
+# Ignore Docker files
+Dockerfile
+.dockerignore
+docker-compose.yml
+
+# Ignore local environment files
+.env

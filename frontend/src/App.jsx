@@ -38,6 +38,17 @@ function App() {
     }
   };
 
+  const deleteTodo = async (id) => {
+    try {
+      await fetch(`${API_URL}/api/todos/${id}`, {
+        method: 'DELETE'
+      });
+      fetchTodos();
+    } catch (err) {
+      alert('Failed to delete todo');
+    }
+  };
+
   return (
     <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
       <h1>🚀 DevOps Todo App</h1>
@@ -62,10 +73,26 @@ function App() {
             border: '1px solid #ddd',
             marginBottom: '5px',
             display: 'flex',
-            justifyContent: 'space-between'
+            justifyContent: 'space-between',
+            alignItems: 'center'
           }}>
             <span>{todo.title}</span>
-            <small>{todo.completed ? '✅' : '⏳'}</small>
+            <div>
+              <small style={{ marginRight: '10px' }}>{todo.completed ? '✅' : '⏳'}</small>
+              <button 
+                onClick={() => deleteTodo(todo.id)}
+                style={{ 
+                  padding: '5px 10px', 
+                  background: '#ff4444',
+                  color: 'white',
+                  border: 'none',
+                  cursor: 'pointer',
+                  borderRadius: '3px'
+                }}
+              >
+                Delete
+              </button>
+            </div>
           </li>
         ))}
       </ul>
