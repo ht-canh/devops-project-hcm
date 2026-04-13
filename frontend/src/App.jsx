@@ -38,6 +38,23 @@ function App() {
     }
   };
 
+  const deleteTodo = async (id) => {
+    try {
+      const res = await fetch(`${API_URL}/api/todos/${id}`, {
+        method: 'DELETE'
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to delete todo');
+      }
+
+      fetchTodos();
+    } catch (err) {
+      alert('Xóa todo thất bại');
+      console.error('Delete error:', err);
+    }
+  };
+
   return (
     <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
       <h1>🚀 DevOps Todo App</h1>
@@ -56,16 +73,34 @@ function App() {
       </div>
 
       <ul style={{ listStyle: 'none', padding: 0 }}>
-        {todos.map(todo => (
-          <li key={todo.id} style={{
-            padding: '10px',
-            border: '1px solid #ddd',
-            marginBottom: '5px',
-            display: 'flex',
-            justifyContent: 'space-between'
-          }}>
-            <span>{todo.title}</span>
-            <small>{todo.completed ? '✅' : '⏳'}</small>
+        {todos.map((todo) => (
+          <li
+            key={todo.id}
+            style={{
+              padding: '10px',
+              border: '1px solid #ddd',
+              marginBottom: '5px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}
+          >
+            <div>
+              <span>{todo.title}</span>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <small>{todo.completed ? '✅' : '⏳'}</small>
+              <button
+                onClick={() => deleteTodo(todo.id)}
+                style={{
+                  padding: '6px 12px',
+                  cursor: 'pointer'
+                }}
+              >
+                Delete
+              </button>
+            </div>
           </li>
         ))}
       </ul>
