@@ -82,4 +82,6 @@ npm test
 6. Show CD deploying automatically
 7. Verify live application updated
 
-Nguyen Hoang Huy
+## Contributors
+
+- Nguyen Hoang Huy
