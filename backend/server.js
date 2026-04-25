@@ -1,4 +1,7 @@
 const express = require('express');
+
+require('dotenv').config();
+
 const { Pool } = require('pg');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -62,6 +65,7 @@ const port = process.env.PORT || 8080;
 // BUG #5: Server starts even in test mode, causing port conflicts
 // STUDENT FIX: Only start server if NOT in test mode
 app.listen(port, () => {
+   console.log(`Backend Info: Connected to DB at ${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`);
    console.log(`Backend running on port ${port}`);
 });
 
