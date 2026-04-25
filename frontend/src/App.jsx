@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-
+// require('dotenv').config();
 // STUDENT TODO: This API_URL works for local development
 // For Docker, you may need to configure nginx proxy or use container networking
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
