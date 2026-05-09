@@ -23,3 +23,39 @@
 # ===========================================
 
 # YOUR CODE HERE:
+# --- Stage 1: The "builder" stage ---  
+# Use a full Node.js image to build our app  
+FROM node:18-alpine AS builder  
+# Set the working directory inside the container  
+WORKDIR /app  
+
+# Copy package.json and package-lock.json (or yarn.lock)  
+COPY package*.json ./  
+# Copy .env file to make environment variables available during build
+COPY .env ./
+
+# Install all dependencies (including devDependencies)  
+RUN npm ci  
+
+# Copy the rest of the application source code  
+COPY . .  
+
+# Build the React app
+RUN npm run build
+
+# --- Stage 2: The "production" stage ---
+# Start from a fresh, lightweight base image
+FROM node:18-alpine AS production
+WORKDIR /app
+
+# Install serve globally to serve the static build
+RUN npm install -g serve
+
+# Copy only the build folder from the builder stage
+COPY --from=builder /app/build ./build
+
+# Expose the port the app listens on
+EXPOSE 3000
+
+# The command to run the application
+CMD ["serve", "-s", "build", "-l", "3000"] 
