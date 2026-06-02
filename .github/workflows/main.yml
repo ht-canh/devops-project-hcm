@@ -1,0 +1,218 @@
+name: Main CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  NODE_VERSION: 18
+  BACKEND_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/devops-todo-backend
+  FRONTEND_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/devops-todo-frontend
+
+jobs:
+  test-and-build:
+    name: Test and Build Application
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: tododb
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d tododb"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Initialize PostgreSQL database
+        run: psql postgresql://postgres:postgres@localhost:5432/tododb -f database/database.sql
+
+      - name: Run backend tests
+        working-directory: backend
+        env:
+          NODE_ENV: test
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: tododb
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+          DB_CONNECTION_TIMEOUT_MS: 5000
+        run: npm test
+
+      - name: Build backend
+        working-directory: backend
+        run: node --check server.js
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: frontend
+        env:
+          REACT_APP_API_URL: http://localhost:8080
+        run: npm run build
+
+      - name: Build Docker images
+        run: docker compose build
+
+  docker-publish:
+    name: Build and Push Docker Images
+    runs-on: ubuntu-latest
+    needs: test-and-build
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: |
+            ${{ env.BACKEND_IMAGE }}:latest
+            ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
+
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          build-args: |
+            REACT_APP_API_URL=http://${{ secrets.HOST }}:8080
+          tags: |
+            ${{ env.FRONTEND_IMAGE }}:latest
+            ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
+
+  deploy:
+    name: Deploy to Ubuntu Server
+    runs-on: ubuntu-latest
+    needs: docker-publish
+
+    steps:
+      - name: Deploy with SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOST }}
+          port: ${{ secrets.PORT }}
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
+          script: |
+            set -e
+
+            APP_DIR="$HOME/devops-todo-app"
+            REPO_URL="https://github.com/${{ github.repository }}.git"
+
+            if [ ! -d "$APP_DIR/.git" ]; then
+              git clone "$REPO_URL" "$APP_DIR"
+            fi
+
+            cd "$APP_DIR"
+            git fetch origin main
+            git reset --hard origin/main
+
+            echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+            docker pull "${{ env.BACKEND_IMAGE }}:latest"
+            docker pull "${{ env.FRONTEND_IMAGE }}:latest"
+
+            cat > docker-compose.prod.yml <<'EOF'
+            version: '3.8'
+
+            services:
+              frontend:
+                image: ${{ env.FRONTEND_IMAGE }}:latest
+                restart: unless-stopped
+                ports:
+                  - "3000:3000"
+                depends_on:
+                  backend:
+                    condition: service_healthy
+                networks:
+                  - todo_network
+
+              backend:
+                image: ${{ env.BACKEND_IMAGE }}:latest
+                restart: unless-stopped
+                ports:
+                  - "8080:8080"
+                environment:
+                  PORT: 8080
+                  DB_HOST: postgres
+                  DB_PORT: 5432
+                  DB_NAME: tododb
+                  DB_USER: postgres
+                  DB_PASSWORD: postgres
+                  DB_CONNECTION_TIMEOUT_MS: 5000
+                depends_on:
+                  postgres:
+                    condition: service_healthy
+                healthcheck:
+                  test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8080/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+                  interval: 10s
+                  timeout: 5s
+                  retries: 5
+                  start_period: 10s
+                networks:
+                  - todo_network
+
+              postgres:
+                image: postgres:15-alpine
+                restart: unless-stopped
+                ports:
+                  - "5432:5432"
+                environment:
+                  POSTGRES_DB: tododb
+                  POSTGRES_USER: postgres
+                  POSTGRES_PASSWORD: postgres
+                volumes:
+                  - postgres_data:/var/lib/postgresql/data
+                  - ./database/database.sql:/docker-entrypoint-initdb.d/database.sql:ro
+                healthcheck:
+                  test: ["CMD-SHELL", "pg_isready -U postgres -d tododb"]
+                  interval: 10s
+                  timeout: 5s
+                  retries: 5
+                  start_period: 10s
+                networks:
+                  - todo_network
+
+            volumes:
+              postgres_data:
+
+            networks:
+              todo_network:
+                driver: bridge
+            EOF
+
+            docker compose -f docker-compose.prod.yml up -d
+            docker compose -f docker-compose.prod.yml ps
